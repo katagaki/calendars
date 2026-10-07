@@ -2,7 +2,6 @@
   "use strict";
 
   const SHOWN_KEY = "calendars.shown";
-  const LANG_KEY = "calendars.lang";
   const DEFAULT_SHOWN = ["gregory", "japanese"];
   const SUN = 0, FRI = 5, SAT = 6;
 
@@ -12,7 +11,6 @@
       edit: "Edit",
       done: "Done",
       showCalendars: "Show calendars",
-      language: "Language",
       empty: "No calendars shown. Select Edit to choose calendars.",
       year: "year",
     },
@@ -21,7 +19,6 @@
       edit: "編集",
       done: "完了",
       showCalendars: "表示する暦",
-      language: "言語",
       empty: "表示中の暦はありません。「編集」から暦を選択してください。",
       year: "年",
     },
@@ -161,13 +158,11 @@
   };
 
   const detectLang = () => {
-    const saved = storage.get(LANG_KEY);
-    if (saved && STRINGS[saved]) return saved;
     return (navigator.languages || [navigator.language]).some((l) => /^ja\b/i.test(l)) ? "ja" : "en";
   };
 
   const shown = loadShown();
-  let lang = detectLang();
+  const lang = detectLang();
 
   const grid = document.getElementById("grid");
   const panel = document.getElementById("panel");
@@ -175,8 +170,6 @@
   const editBtn = document.getElementById("edit");
   const doneBtn = document.getElementById("done");
   const panelTitle = document.getElementById("panel-title");
-  const langLabel = document.getElementById("lang-label");
-  const langButtons = document.querySelectorAll("[data-lang]");
 
   const el = (tag, className, text) => {
     const node = document.createElement(tag);
@@ -192,10 +185,6 @@
     editBtn.textContent = t.edit;
     doneBtn.textContent = t.done;
     panelTitle.textContent = t.showCalendars;
-    langLabel.textContent = t.language;
-    for (const btn of langButtons) {
-      btn.setAttribute("aria-pressed", String(btn.dataset.lang === lang));
-    }
   };
 
   const render = () => {
@@ -270,16 +259,6 @@
       editBtn.focus();
     }
   };
-
-  for (const btn of langButtons) {
-    btn.addEventListener("click", () => {
-      lang = btn.dataset.lang;
-      storage.set(LANG_KEY, lang);
-      applyStrings();
-      renderOptions();
-      render();
-    });
-  }
 
   editBtn.addEventListener("click", () => setPanel(panel.hidden));
   doneBtn.addEventListener("click", () => setPanel(false));
