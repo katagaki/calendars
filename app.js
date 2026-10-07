@@ -12,7 +12,6 @@
       done: "Done",
       showCalendars: "Show calendars",
       empty: "No calendars shown. Select Edit to choose calendars.",
-      year: "year",
     },
     ja: {
       title: "カレンダー",
@@ -20,7 +19,6 @@
       done: "完了",
       showCalendars: "表示する暦",
       empty: "表示中の暦はありません。「編集」から暦を選択してください。",
-      year: "年",
     },
   };
 
@@ -112,10 +110,15 @@
         if (p.type !== "literal") fields[p.type] = p.value;
       }
       if (cal.era && fields.era) fields.era = cal.era;
+      if (lang === "en") fields.month = fields.month.replace(/^(.*)bis$/, "Leap $1");
+      // Hebrew months are numbered in Japanese, which makes leap-year Adar I/II ambiguous.
+      if (cal.id === "hebrew" && lang === "ja") {
+        fields.month = new Intl.DateTimeFormat("en-US-u-ca-hebrew", { month: "long" }).format(date);
+      }
     }
     let { month, day } = fields;
     if (lang === "ja") {
-      if (!month.endsWith("月")) month += "月";
+      if (/^\d+$/.test(month)) month += "月";
       day += "日";
     }
     return { year: composeYear(cal, lang, fields), month, day };
@@ -158,7 +161,8 @@
   };
 
   const detectLang = () => {
-    return (navigator.languages || [navigator.language]).some((l) => /^ja\b/i.test(l)) ? "ja" : "en";
+    const match = (navigator.languages || [navigator.language]).find((l) => /^(en|ja)\b/i.test(l));
+    return match?.slice(0, 2).toLowerCase() === "ja" ? "ja" : "en";
   };
 
   const shown = loadShown();
@@ -267,13 +271,17 @@
   });
 
   let lastDay = new Date().toDateString();
-  setInterval(() => {
+  const refreshIfNewDay = () => {
     const today = new Date().toDateString();
     if (today !== lastDay) {
       lastDay = today;
       render();
     }
-  }, 30000);
+  };
+  setInterval(refreshIfNewDay, 30000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshIfNewDay();
+  });
 
   applyStrings();
   render();
