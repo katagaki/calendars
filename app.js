@@ -17,7 +17,7 @@
       year: "year",
     },
     ja: {
-      title: "暦",
+      title: "カレンダー",
       edit: "編集",
       done: "完了",
       showCalendars: "表示する暦",
