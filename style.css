@@ -133,6 +133,35 @@ body {
   font-size: 16px;
   font-weight: 600;
 }
+.lang {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.lang-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.switcher { display: flex; }
+.switcher button {
+  flex: 1;
+  min-height: 40px;
+  border: 1px solid var(--text-3);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  cursor: pointer;
+}
+.switcher button + button { border-left: 0; }
+.switcher button:hover { background: var(--layer-hover); color: var(--text); }
+.switcher button[aria-pressed="true"] {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+.switcher button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 .options {
   list-style: none;
   margin: 0;
