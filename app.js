@@ -81,33 +81,53 @@
       .format(new Date(Date.UTC(j.year, j.month - 1, j.day)));
   };
 
-  const formatJuche = (lang, date) => {
-    const y = date.getFullYear() - 1911, m = date.getMonth() + 1, d = date.getDate();
-    if (lang === "ja") return `主体${y}年${m}月${d}日`;
-    if (lang === "ko") return `주체${y}년 ${m}월 ${d}일`;
-    return `${new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric" }).format(date)}, Juche ${y}`;
+  const formatJucheKorean = (date) =>
+    `주체${date.getFullYear() - 1911}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+
+  const ERA_FIRST = new Set(["japanese", "roc", "juche"]);
+
+  const composeYear = (cal, lang, { era, year, relatedYear, yearName }) => {
+    if (yearName) {
+      return lang === "ja" ? `${relatedYear}年（${yearName}）` : `${capitalize(yearName)} (${relatedYear})`;
+    }
+    if (lang === "ja") return `${era ?? ""}${year}年`;
+    if (!era) return year;
+    return ERA_FIRST.has(cal.id) ? `${era} ${year}` : `${year} ${era}`;
   };
 
-  const formatMain = (cal, date, lang) => {
+  const dateParts = (cal, date, lang) => {
     const locale = UI_LOCALE[lang];
-    if (cal.id === "julian") return formatJulian(locale, date);
-    if (cal.id === "juche") return formatJuche(lang, date);
-    const fmt = new Intl.DateTimeFormat(`${locale}-u-ca-${cal.id}`, DATE_OPTS);
-    if (lang === "en" && (cal.id === "chinese" || cal.id === "dangi")) {
-      const parts = fmt.formatToParts(date);
-      const get = (type) => parts.find((p) => p.type === type)?.value;
-      const yearName = get("yearName");
-      return `${get("month")} ${get("day")}, ${yearName ? capitalize(yearName) + " year" : get("relatedYear")}`;
+    let fields;
+    if (cal.id === "julian" || cal.id === "juche") {
+      const g = cal.id === "julian"
+        ? julian(date)
+        : { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
+      const utc = new Date(Date.UTC(g.year, g.month - 1, g.day));
+      fields = {
+        era: cal.id === "juche" ? (lang === "ja" ? "主体" : "Juche") : undefined,
+        year: String(cal.id === "juche" ? g.year - 1911 : g.year),
+        month: new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" }).format(utc),
+        day: String(g.day),
+      };
+    } else {
+      fields = {};
+      for (const p of new Intl.DateTimeFormat(`${locale}-u-ca-${cal.id}`, DATE_OPTS).formatToParts(date)) {
+        if (p.type !== "literal") fields[p.type] = p.value;
+      }
+      if (cal.era && fields.era) fields.era = cal.era;
     }
-    if (!cal.era) return fmt.format(date);
-    const text = fmt.formatToParts(date).map((p) => (p.type === "era" ? cal.era : p.value)).join("");
-    return lang === "en" && !text.endsWith(cal.era) ? text.replace(/\s*AH$/, "") + " " + cal.era : text;
+    let { month, day } = fields;
+    if (lang === "ja") {
+      if (!month.endsWith("月")) month += "月";
+      day += "日";
+    }
+    return { year: composeYear(cal, lang, fields), month, day };
   };
 
   const formatNative = (cal, date) => {
     if (!cal.locale) return null;
     if (cal.id === "julian") return formatJulian(cal.locale, date);
-    if (cal.id === "juche") return formatJuche("ko", date);
+    if (cal.id === "juche") return formatJucheKorean(date);
     return new Intl.DateTimeFormat(`${cal.locale}-u-ca-${cal.id}`, DATE_OPTS)
       .formatToParts(date)
       .filter((p) => !/^ERA\d+$/.test(p.value))
@@ -196,8 +216,15 @@
       label.append(el("span", "region", "· " + cal.region[lang]));
 
       const body = el("div");
-      const main = formatMain(cal, now, lang);
-      body.append(el("p", "date", main));
+      const parts = dateParts(cal, now, lang);
+      const dateEl = el("p", "date");
+      dateEl.append(
+        el("span", "date-year", parts.year),
+        el("span", "date-month", parts.month),
+        el("span", "date-day", parts.day),
+      );
+      body.append(dateEl);
+      const main = lang === "ja" ? parts.year + parts.month + parts.day : null;
       const nativeText = formatNative(cal, now);
       if (nativeText && nativeText !== main) {
         const native = el("p", "native", nativeText);

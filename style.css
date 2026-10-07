@@ -30,6 +30,13 @@
   }
 }
 * { box-sizing: border-box; }
+html {
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
 html, body { height: 100%; margin: 0; }
 body {
   display: flex;
@@ -57,7 +64,7 @@ body {
   color: var(--text);
   font: inherit;
   text-align: left;
-  cursor: pointer;
+  cursor: default;
 }
 .btn:hover { background: var(--layer-hover); }
 .btn:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
@@ -88,14 +95,17 @@ body {
 }
 .region { color: var(--text-3); }
 .date {
+  display: flex;
+  flex-direction: column;
   margin: 0;
-  font-size: 28px;
-  line-height: 1.25;
   font-weight: 700;
+  line-height: 1.2;
   overflow-wrap: anywhere;
 }
+.date-year, .date-month { font-size: 24px; }
+.date-day { font-size: 56px; line-height: 1.1; }
 .native {
-  margin: 4px 0 0;
+  margin: 8px 0 0;
   text-align: left;
   font-size: 16px;
   color: var(--text-2);
@@ -152,7 +162,7 @@ body {
   background: transparent;
   color: var(--text-2);
   font: inherit;
-  cursor: pointer;
+  cursor: default;
 }
 .switcher button + button { border-left: 0; }
 .switcher button:hover { background: var(--layer-hover); color: var(--text); }
@@ -175,7 +185,7 @@ body {
   min-height: 48px;
   padding: 0 16px;
   border-bottom: 1px solid var(--border);
-  cursor: pointer;
+  cursor: default;
 }
 .options label:hover { background: var(--layer-hover); }
 .options input {
@@ -188,5 +198,6 @@ body {
 @media (max-width: 671px) {
   .grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
   .cell { border-right: 0; }
-  .date { font-size: 24px; }
+  .date-year, .date-month { font-size: 20px; }
+  .date-day { font-size: 44px; }
 }
